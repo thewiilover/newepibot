@@ -1,0 +1,53 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model DiscordSession {
+  id           String   @id
+  discordUserId String
+  username      String
+  avatar        String?
+  accessToken   String
+  refreshToken  String
+  tokenType     String
+  scope         String
+  expiresAt     DateTime
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model BotConfig {
+  id        Int      @id @default(1)
+  guildId   String
+  channelId String
+  roleId    String?
+  updatedAt DateTime @updatedAt
+}
+
+model BotGuild {
+  id      String  @id
+  name    String
+  icon    String?
+  addedAt DateTime @default(now())
+}
+
+model TrackedAnime {
+  id                  String   @id @default(cuid())
+  source              String
+  sourceId            String?
+  title               String
+  status              String?
+  nextEpisode         Int?
+  nextAiringAt        DateTime?
+  lastNotifiedEpisode  Int?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@index([source, sourceId])
+  @@index([nextAiringAt])
+}
