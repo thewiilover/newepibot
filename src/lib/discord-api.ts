@@ -22,14 +22,17 @@ export async function fetchGuildRoles(guildId: string) {
   return response.json() as Promise<Array<{ id: string; name: string; color: number }>>;
 }
 
-export async function sendChannelMessage(channelId: string, content: string) {
+export async function sendChannelPayload(
+  channelId: string,
+  payload: { content?: string; embeds?: Array<Record<string, unknown>> },
+) {
   const response = await fetch(`https://discord.com/api/v10/channels/${channelId}/messages`, {
     method: "POST",
     headers: {
       Authorization: `Bot ${env.DISCORD_BOT_TOKEN}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ content }),
+    body: JSON.stringify(payload),
   });
 
   if (!response.ok) {
@@ -38,4 +41,8 @@ export async function sendChannelMessage(channelId: string, content: string) {
   }
 
   return response.json();
+}
+
+export async function sendChannelMessage(channelId: string, content: string) {
+  return sendChannelPayload(channelId, { content });
 }

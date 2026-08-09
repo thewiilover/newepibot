@@ -1,7 +1,9 @@
 import { Client, GatewayIntentBits } from "discord.js";
 import { env } from "@/lib/env";
 import { refreshAllTrackedAnime } from "@/lib/tracked-anime";
+import { refreshAllTrackedManga } from "@/lib/tracked-manga";
 import { schedulerIntervalMs, sendReleaseNotifications } from "@/lib/notification-service";
+import { sendMangaNotifications } from "@/lib/manga-notification-service";
 import { db } from "@/lib/db";
 
 async function main() {
@@ -23,19 +25,23 @@ async function main() {
     }
 
     // Send notifications now that the client is ready. The tracked anime
-    // records are refreshed at process start (before login) to ensure we
-    // have the latest airing data on every bot start.
+    // and manga records are refreshed at process start (before login) to
+    // ensure we have the latest release data on every bot start.
     await sendReleaseNotifications(client);
+    await sendMangaNotifications(client);
 
     setInterval(async () => {
       await refreshAllTrackedAnime();
+      await refreshAllTrackedManga();
       await sendReleaseNotifications(client);
+      await sendMangaNotifications(client);
     }, schedulerIntervalMs());
   });
-  // Refresh tracked anime records before logging in so the DB has up-to-date
-  // airing dates on every bot start. Don't let a refresh failure stop the bot.
+  // Refresh tracked anime and manga records before logging in so the DB has
+  // up-to-date release data on every bot start. Don't let a refresh failure stop the bot.
   try {
     await refreshAllTrackedAnime();
+    await refreshAllTrackedManga();
   } catch (err) {
     console.error("Initial refresh failed:", err);
   }

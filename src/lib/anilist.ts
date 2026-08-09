@@ -5,6 +5,18 @@ type AiringEpisode = {
   airingAt: number;
 };
 
+type MediaType = "ANIME" | "MANGA";
+
+type MediaInfo = {
+  id: number;
+  idMal: number | null;
+  title: {
+    userPreferred: string;
+  };
+  nextAiringEpisode: AiringEpisode | null;
+  chapters: number | null;
+};
+
 async function anilistRequest<T>(query: string, variables: Record<string, unknown>): Promise<T> {
   const response = await fetch(ANILIST_API, {
     method: "POST",
@@ -29,14 +41,19 @@ async function anilistRequest<T>(query: string, variables: Record<string, unknow
 }
 
 export async function importAniListUsername(userName: string) {
+  return importAniListMediaList(userName, "ANIME");
+}
+
+export async function importAniListMediaList(userName: string, mediaType: MediaType) {
   const query = `
-    query ($userName: String!) {
-      MediaListCollection(userName: $userName, type: ANIME) {
+    query ($userName: String!, $mediaType: MediaType!) {
+      MediaListCollection(userName: $userName, type: $mediaType) {
         lists {
           entries {
             status
             media {
               id
+              idMal
               title {
                 userPreferred
               }
@@ -48,26 +65,40 @@ export async function importAniListUsername(userName: string) {
   `;
 
   const data = await anilistRequest<{
-    MediaListCollection: { lists: Array<{ entries: Array<{ status: string; media: { id: number; title: { userPreferred: string } } }> }> } | null;
-  }>(query, { userName });
+    MediaListCollection: {
+      lists: Array<{
+        entries: Array<{
+          status: string;
+          media: { id: number; idMal: number | null; title: { userPreferred: string } };
+        }>;
+      }>;
+    } | null;
+  }>(query, { userName, mediaType });
 
+  const allowedStatuses = mediaType === "MANGA" ? ["CURRENT", "PLANNING", "REREADING"] : ["CURRENT", "PLANNING", "REPEATING"];
   const lists = data.MediaListCollection?.lists ?? [];
   return lists.flatMap((list) =>
     list.entries
-      .filter((entry) => ["CURRENT", "PLANNING", "REPEATING"].includes(entry.status))
+      .filter((entry) => allowedStatuses.includes(entry.status))
       .map((entry) => ({
         source: "ANILIST" as const,
         sourceId: String(entry.media.id),
+        malId: entry.media.idMal,
         title: entry.media.title.userPreferred,
       })),
   );
 }
 
 export async function searchAiringInfo(title: string) {
+  return searchMediaInfo(title, "ANIME");
+}
+
+export async function searchMediaInfo(title: string, mediaType: MediaType) {
   const query = `
-    query ($search: String!) {
-      Media(search: $search, type: ANIME, sort: POPULARITY_DESC) {
+    query ($search: String!, $mediaType: MediaType!) {
+      Media(search: $search, type: $mediaType, sort: POPULARITY_DESC) {
         id
+        idMal
         title {
           userPreferred
         }
@@ -75,19 +106,25 @@ export async function searchAiringInfo(title: string) {
           episode
           airingAt
         }
+        chapters
       }
     }
   `;
 
-  const data = await anilistRequest<{ Media: { id: number; title: { userPreferred: string }; nextAiringEpisode: AiringEpisode | null } | null }>(query, { search: title });
+  const data = await anilistRequest<{ Media: MediaInfo | null }>(query, { search: title, mediaType });
   return data.Media;
 }
 
 export async function fetchAiringInfoById(id: string) {
+  return fetchMediaInfoById(id, "ANIME");
+}
+
+export async function fetchMediaInfoById(id: string, mediaType: MediaType) {
   const query = `
-    query ($id: Int!) {
-      Media(id: $id, type: ANIME) {
+    query ($id: Int!, $mediaType: MediaType!) {
+      Media(id: $id, type: $mediaType) {
         id
+        idMal
         title {
           userPreferred
         }
@@ -95,10 +132,11 @@ export async function fetchAiringInfoById(id: string) {
           episode
           airingAt
         }
+        chapters
       }
     }
   `;
 
-  const data = await anilistRequest<{ Media: { id: number; title: { userPreferred: string }; nextAiringEpisode: AiringEpisode | null } | null }>(query, { id: Number(id) });
+  const data = await anilistRequest<{ Media: MediaInfo | null }>(query, { id: Number(id), mediaType });
   return data.Media;
 }

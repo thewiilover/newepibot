@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "NewEpiBot",
-  description: "Discord anime release tracker and notification dashboard",
+  description: "Discord anime and manga release tracker and notification dashboard",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

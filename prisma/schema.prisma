@@ -26,6 +26,7 @@ model BotConfig {
   guildId   String
   channelId String
   roleId    String?
+  mangaRoleId String?
   updatedAt DateTime @updatedAt
 }
 
@@ -50,4 +51,20 @@ model TrackedAnime {
 
   @@index([source, sourceId])
   @@index([nextAiringAt])
+}
+
+model TrackedManga {
+  id                  String   @id @default(cuid())
+  source              String
+  sourceId            String?
+  malId               Int?
+  title               String
+  chapterCount        Int?
+  lastNotifiedChapter  Int?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@index([source, sourceId])
+  @@index([malId])
+  @@index([chapterCount])
 }

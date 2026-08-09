@@ -27,7 +27,7 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ guildId: string }> }) {
   const { guildId } = await params;
-  const body = (await request.json()) as { channelId?: string; roleId?: string | null };
+  const body = (await request.json()) as { channelId?: string; roleId?: string | null; mangaRoleId?: string | null };
 
   if (!body.channelId) {
     return NextResponse.json({ error: "channelId is required" }, { status: 400 });
@@ -38,13 +38,15 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     update: {
       guildId,
       channelId: body.channelId,
-      roleId: body.roleId ?? null,
+      ...(body.roleId !== undefined ? { roleId: body.roleId } : {}),
+      ...(body.mangaRoleId !== undefined ? { mangaRoleId: body.mangaRoleId } : {}),
     },
     create: {
       id: 1,
       guildId,
       channelId: body.channelId,
       roleId: body.roleId ?? null,
+      mangaRoleId: body.mangaRoleId ?? null,
     },
   });
 

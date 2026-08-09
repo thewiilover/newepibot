@@ -140,7 +140,7 @@ export default function Page() {
           <h1 className="title">Notify the right server when a tracked anime drops a new episode.</h1>
           <p className="subtitle">
             Connect Discord, choose a guild, channel, and ping role, then import the anime you want to follow from AniList or MyAnimeList.
-            The bot polls AniList release data and posts alerts automatically.
+            The bot polls AniList release data and posts alerts automatically. Manga lives on a separate page.
           </p>
 
           <div className="hero-grid">
@@ -162,6 +162,9 @@ export default function Page() {
             <a className="button primary" href="/api/auth/start">
               Connect Discord
             </a>
+            <a className="button" href="/manga">
+              Open manga dashboard
+            </a>
             <form action="/api/auth/logout" method="post">
               <button className="button ghost" type="submit">
                 Sign out
@@ -169,21 +172,6 @@ export default function Page() {
             </form>
           </div>
         </section>
-
-        <aside className="card section stack">
-          <div className="status ok">
-            <strong>Bot ready</strong>
-            <div className="muted">The worker watches tracked anime and sends alerts to the selected Discord channel.</div>
-          </div>
-          <div className="status warn">
-            <strong>Release source</strong>
-            <div className="muted">AniList provides airing data for notifications. MAL imports are converted into track records.</div>
-          </div>
-          <div className="status">
-            <strong>What you control</strong>
-            <div className="muted">Choose server, channel, and role ping; then import or grow the tracked watch list.</div>
-          </div>
-        </aside>
       </div>
 
       <div className="grid-2" style={{ marginTop: 20 }}>
@@ -236,7 +224,7 @@ export default function Page() {
               type="button"
               onClick={async () => {
                 try {
-                  const res = await fetch(`/api/discord/test-ping`, { method: "POST" });
+                  const res = await fetch(`/api/anime/test-ping`, { method: "POST" });
                   if (res.ok) {
                     setMessage("Test ping sent.");
                   } else {

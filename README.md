@@ -1,13 +1,13 @@
 # NewEpiBot
 
-Discord bot + web dashboard for tracking anime episode releases and posting notifications to a selected server, channel, and role.
+Discord bot + web dashboard for tracking anime episode releases and manga chapter updates, then posting notifications to a selected server, channel, and role.
 
 ## What it does
 
 - Connects to Discord with OAuth for dashboard access.
 - Lets you choose the guild, channel, and role to ping for release alerts.
-- Imports watch lists from AniList usernames or MyAnimeList XML exports.
-- Polls AniList release data and posts a Discord notification when a tracked show airs a new episode.
+- Imports anime and manga watch lists from AniList usernames or MyAnimeList XML exports.
+- Polls AniList release data and posts a Discord notification when a tracked anime airs a new episode or a tracked manga gains a new chapter.
 
 ## Setup
 
@@ -27,6 +27,6 @@ Discord bot + web dashboard for tracking anime episode releases and posting noti
 
 ## Notes
 
-- AniList is used as the release source.
-- MyAnimeList imports are supported from XML export files.
-- The project is scaffolded for a single active notification target at a time.
+- AniList is used as the release source for both anime and manga.
+- MyAnimeList imports are supported from XML export files for both media types.
+- Anime and manga share the Discord channel, but each can use its own role ping.
