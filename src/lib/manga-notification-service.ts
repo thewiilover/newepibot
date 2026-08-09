@@ -1,6 +1,13 @@
-import type { Client, TextBasedChannel } from "discord.js";
+import { EmbedBuilder, type Client, type TextBasedChannel } from "discord.js";
 import { db } from "@/lib/db";
-import { fetchMangaChapterCountByMalId, fetchMangaMalIdByAniListId, searchMangaMalIdByTitle } from "@/lib/manga";
+import {
+  fetchMangaChapterCountByMalId,
+  fetchMangaInfoById,
+  fetchMangaInfoByMalId,
+  fetchMangaMalIdByAniListId,
+  searchMangaInfo,
+  searchMangaMalIdByTitle,
+} from "@/lib/manga";
 
 export async function sendMangaNotifications(client: Client) {
   const config = await db.botConfig.findUnique({ where: { id: 1 } });
@@ -14,17 +21,24 @@ export async function sendMangaNotifications(client: Client) {
 
   for (const track of tracks) {
     try {
+      let media = null as Awaited<ReturnType<typeof fetchMangaInfoById>> | Awaited<ReturnType<typeof fetchMangaInfoByMalId>> | Awaited<ReturnType<typeof searchMangaInfo>>;
       let malId = track.malId;
       if (malId == null && track.source === "ANILIST" && track.sourceId) {
         malId = await fetchMangaMalIdByAniListId(track.sourceId);
+        media = track.sourceId ? await fetchMangaInfoById(track.sourceId) : null;
       }
 
       if (malId == null) {
         malId = await searchMangaMalIdByTitle(track.title);
+        media = await searchMangaInfo(track.title);
       }
 
       if (malId == null) {
         continue;
+      }
+
+      if (!media) {
+        media = track.sourceId && track.source === "ANILIST" ? await fetchMangaInfoById(track.sourceId) : await fetchMangaInfoByMalId(malId);
       }
 
       if (track.malId !== malId) {
@@ -49,8 +63,23 @@ export async function sendMangaNotifications(client: Client) {
 
       if (chapterCount > track.chapterCount && track.lastNotifiedChapter !== chapterCount) {
         const rolePing = config.mangaRoleId ? `<@&${config.mangaRoleId}> ` : "";
+        const embed = new EmbedBuilder()
+          .setTitle(media?.title.userPreferred ?? title)
+          .setDescription(`New chapter ${chapterCount} is now available.`)
+          .setColor(0xf59e0b)
+          .setTimestamp(new Date());
+
+        if (media?.siteUrl) {
+          embed.setURL(media.siteUrl);
+        }
+
+        if (media?.coverImage?.large) {
+          embed.setThumbnail(media.coverImage.large);
+        }
+
         await (textChannel as any).send({
-          content: `${rolePing}New manga chapter alert: **${title}** chapter ${chapterCount} is now available.`,
+          content: rolePing,
+          embeds: [embed],
         });
 
         await db.trackedManga.update({

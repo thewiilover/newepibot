@@ -1,4 +1,4 @@
-import { fetchMediaInfoById, importAniListMediaList, searchMediaInfo } from "@/lib/anilist";
+import { fetchMediaInfoById, fetchMediaInfoByMalId, importAniListMediaList, searchMediaInfo } from "@/lib/anilist";
 
 const MALSYNC_API = "https://api.malsync.moe";
 
@@ -12,6 +12,10 @@ export async function searchMangaInfo(title: string) {
 
 export async function fetchMangaInfoById(id: string) {
   return fetchMediaInfoById(id, "MANGA");
+}
+
+export async function fetchMangaInfoByMalId(malId: number) {
+  return fetchMediaInfoByMalId(malId, "MANGA");
 }
 
 export async function fetchMangaMalIdByAniListId(id: string) {

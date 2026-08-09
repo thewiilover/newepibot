@@ -10,6 +10,10 @@ type MediaType = "ANIME" | "MANGA";
 type MediaInfo = {
   id: number;
   idMal: number | null;
+  siteUrl: string;
+  coverImage: {
+    large: string | null;
+  } | null;
   title: {
     userPreferred: string;
   };
@@ -99,6 +103,10 @@ export async function searchMediaInfo(title: string, mediaType: MediaType) {
       Media(search: $search, type: $mediaType, sort: POPULARITY_DESC) {
         id
         idMal
+        siteUrl
+        coverImage {
+          large
+        }
         title {
           userPreferred
         }
@@ -125,6 +133,10 @@ export async function fetchMediaInfoById(id: string, mediaType: MediaType) {
       Media(id: $id, type: $mediaType) {
         id
         idMal
+        siteUrl
+        coverImage {
+          large
+        }
         title {
           userPreferred
         }
@@ -138,5 +150,31 @@ export async function fetchMediaInfoById(id: string, mediaType: MediaType) {
   `;
 
   const data = await anilistRequest<{ Media: MediaInfo | null }>(query, { id: Number(id), mediaType });
+  return data.Media;
+}
+
+export async function fetchMediaInfoByMalId(malId: number, mediaType: MediaType) {
+  const query = `
+    query ($idMal: Int!, $mediaType: MediaType!) {
+      Media(idMal: $idMal, type: $mediaType) {
+        id
+        idMal
+        siteUrl
+        coverImage {
+          large
+        }
+        title {
+          userPreferred
+        }
+        nextAiringEpisode {
+          episode
+          airingAt
+        }
+        chapters
+      }
+    }
+  `;
+
+  const data = await anilistRequest<{ Media: MediaInfo | null }>(query, { idMal: malId, mediaType });
   return data.Media;
 }

@@ -1,4 +1,4 @@
-import type { Client, TextBasedChannel } from "discord.js";
+import { EmbedBuilder, type Client, type TextBasedChannel } from "discord.js";
 import { db } from "@/lib/db";
 import { fetchAiringInfoById, searchAiringInfo } from "@/lib/anilist";
 
@@ -33,8 +33,23 @@ export async function sendReleaseNotifications(client: Client) {
       }
 
       const rolePing = config.roleId ? `<@&${config.roleId}> ` : "";
+      const embed = new EmbedBuilder()
+        .setTitle(media.title.userPreferred)
+        .setDescription(`New episode ${airing.episode} is now available.`)
+        .setColor(0x38bdf8)
+        .setTimestamp(airingAt);
+
+      if (media.siteUrl) {
+        embed.setURL(media.siteUrl);
+      }
+
+      if (media.coverImage?.large) {
+        embed.setThumbnail(media.coverImage.large);
+      }
+
       await (textChannel as any).send({
-        content: `${rolePing}New episode alert: **${media.title.userPreferred}** Episode ${airing.episode} is now available on AniList timing data.`,
+        content: rolePing,
+        embeds: [embed],
       });
 
       await db.trackedAnime.update({
