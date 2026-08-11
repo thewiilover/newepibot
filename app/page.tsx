@@ -132,6 +132,22 @@ export default function Page() {
     }
   }
 
+  async function forceSendLatestEpisode(id: string) {
+    try {
+      const res = await fetch(`/api/anime/tracks/${id}/force-send`, { method: "POST" });
+      if (res.ok) {
+        const body = (await res.json()) as { title?: string; episode?: number | null };
+        setMessage(`Force sent for ${body.title ?? "tracked series"}${body.episode ? ` episode ${body.episode}` : ""}.`);
+        await loadTracks();
+      } else {
+        const body = await res.json().catch(() => null);
+        setMessage(`Force send failed: ${body?.error ?? res.statusText}`);
+      }
+    } catch (e: any) {
+      setMessage(`Force send error: ${e.message ?? e}`);
+    }
+  }
+
   return (
     <main className="shell">
       <div className="hero fade-in">
@@ -242,6 +258,7 @@ export default function Page() {
               Refresh server data
             </button>
           </div>
+
         </section>
 
         <section className="card section">
@@ -283,6 +300,9 @@ export default function Page() {
               </div>
               <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                 <div className="tag">{track.nextAiringAt ? new Date(track.nextAiringAt).toLocaleString() : "no date yet"}</div>
+                <button className="button" onClick={() => void forceSendLatestEpisode(track.id)}>
+                  Force send
+                </button>
                 <button className="button ghost" onClick={() => void removeTrack(track.id)}>
                   Remove
                 </button>
