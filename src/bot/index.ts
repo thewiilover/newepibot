@@ -2,12 +2,23 @@ import { Client, GatewayIntentBits } from "discord.js";
 import { env } from "@/lib/env";
 import { refreshAllTrackedAnime } from "@/lib/tracked-anime";
 import { refreshAllTrackedManga } from "@/lib/tracked-manga";
-import { schedulerIntervalMs, sendReleaseNotifications } from "@/lib/notification-service";
+import { nextAnimeNotificationDelayMs, schedulerIntervalMs, sendReleaseNotifications } from "@/lib/notification-service";
 import { sendMangaNotifications } from "@/lib/manga-notification-service";
 import { db } from "@/lib/db";
 
 async function main() {
   const client = new Client({ intents: [GatewayIntentBits.Guilds] });
+  let animeTimer: ReturnType<typeof setTimeout> | null = null;
+
+  async function runAnimeNotificationCycle() {
+    await refreshAllTrackedAnime();
+    await sendReleaseNotifications(client);
+
+    const nextDelay = await nextAnimeNotificationDelayMs();
+    animeTimer = setTimeout(() => {
+      void runAnimeNotificationCycle();
+    }, nextDelay);
+  }
 
   client.once("ready", async () => {
     console.log(`Logged in as ${client.user?.tag ?? "Discord bot"}`);
@@ -27,13 +38,12 @@ async function main() {
     // Send notifications now that the client is ready. The tracked anime
     // and manga records are refreshed at process start (before login) to
     // ensure we have the latest release data on every bot start.
-    await sendReleaseNotifications(client);
+    await runAnimeNotificationCycle();
     await sendMangaNotifications(client);
 
     setInterval(async () => {
       await refreshAllTrackedAnime();
       await refreshAllTrackedManga();
-      await sendReleaseNotifications(client);
       await sendMangaNotifications(client);
     }, schedulerIntervalMs());
   });

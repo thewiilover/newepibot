@@ -142,3 +142,18 @@ async function sendReleasePayload(
 export function schedulerIntervalMs() {
   return 15 * 60 * 1000;
 }
+
+export async function nextAnimeNotificationDelayMs(now = Date.now()) {
+  const tracks = await db.trackedAnime.findMany({
+    select: { nextAiringAt: true },
+    orderBy: { nextAiringAt: "asc" },
+  });
+
+  const nextAiringAt = tracks.find((track) => track.nextAiringAt)?.nextAiringAt;
+  if (!nextAiringAt) {
+    return schedulerIntervalMs();
+  }
+
+  const delay = nextAiringAt.getTime() - now;
+  return Math.max(30_000, delay);
+}
