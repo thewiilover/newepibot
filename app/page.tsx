@@ -151,10 +151,18 @@ export default function Page() {
 
   async function forceRefreshCommands() {
     try {
-      const res = await fetch("/api/discord/commands/refresh", { method: "POST" });
+      if (!guildId) {
+        setMessage("Select a server first.");
+        return;
+      }
+      const res = await fetch("/api/discord/commands/refresh", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ guildId }),
+      });
       const body = await res.json();
       if (res.ok) {
-        setMessage("Slash commands refreshed globally.");
+        setMessage(`Slash commands refreshed for server.`);
       } else {
         setMessage(`Refresh failed: ${body?.error ?? res.statusText}`);
       }
