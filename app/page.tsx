@@ -143,8 +143,24 @@ export default function Page() {
         const body = await res.json().catch(() => null);
         setMessage(`Force send failed: ${body?.error ?? res.statusText}`);
       }
-    } catch (e: any) {
-      setMessage(`Force send error: ${e.message ?? e}`);
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : String(e);
+      setMessage(`Force send error: ${message}`);
+    }
+  }
+
+  async function forceRefreshCommands() {
+    try {
+      const res = await fetch("/api/discord/commands/refresh", { method: "POST" });
+      const body = await res.json();
+      if (res.ok) {
+        setMessage("Slash commands refreshed globally.");
+      } else {
+        setMessage(`Refresh failed: ${body?.error ?? res.statusText}`);
+      }
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : String(e);
+      setMessage(`Refresh error: ${message}`);
     }
   }
 
@@ -247,8 +263,9 @@ export default function Page() {
                     const body = await res.json();
                     setMessage(`Test ping failed: ${body?.error ?? res.statusText}`);
                   }
-                } catch (e: any) {
-                  setMessage(`Test ping error: ${e.message ?? e}`);
+                } catch (e: unknown) {
+                  const message = e instanceof Error ? e.message : String(e);
+                  setMessage(`Test ping error: ${message}`);
                 }
               }}
             >
@@ -256,6 +273,9 @@ export default function Page() {
             </button>
             <button className="button" type="button" onClick={() => void loadGuildDetails(guildId)}>
               Refresh server data
+            </button>
+            <button className="button" type="button" onClick={() => void forceRefreshCommands()}>
+              Refresh slash commands
             </button>
           </div>
 

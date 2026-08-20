@@ -5,6 +5,7 @@ import { refreshAllTrackedManga } from "@/lib/tracked-manga";
 import { nextAnimeNotificationDelayMs, schedulerIntervalMs, sendReleaseNotifications } from "@/lib/notification-service";
 import { sendMangaNotifications } from "@/lib/manga-notification-service";
 import { db } from "@/lib/db";
+import { searchCommand, handleSearchCommand } from "./commands/search";
 
 async function main() {
   const client = new Client({ intents: [GatewayIntentBits.Guilds] });
@@ -34,6 +35,22 @@ async function main() {
         // ignore db errors during upsert
       }
     }
+
+    // Register slash command globally
+    try {
+      await client.application?.commands.create(searchCommand.toJSON());
+      console.log("Slash command 'search' registered successfully");
+    } catch (error) {
+      console.error("Failed to register slash command:", error);
+    }
+
+    // Handle slash command interactions
+    client.on("interactionCreate", async (interaction) => {
+      if (!interaction.isChatInputCommand()) return;
+      if (interaction.commandName === "search") {
+        await handleSearchCommand(interaction);
+      }
+    });
 
     // Send notifications now that the client is ready. The tracked anime
     // and manga records are refreshed at process start (before login) to
