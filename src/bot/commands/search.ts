@@ -32,7 +32,7 @@ export async function handleSearchCommand(interaction: ChatInputCommandInteracti
     const result = await searchAnimeManga(title, type);
 
     if (isSearchError(result)) {
-      await interaction.editReply({ content: result.error.message });
+      await interaction.editReply({ content: "No results found for this search" });
       return;
     }
 
